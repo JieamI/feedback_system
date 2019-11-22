@@ -6,3 +6,5 @@ __pycache__
 .flaskenv
 *.db
 .vs
+.gitignore
+.vscode
