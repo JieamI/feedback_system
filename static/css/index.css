@@ -1,6 +1,4 @@
 body, html { font-size: 100%; 	padding: 0; margin: 0;}
-
-/* Reset */
 *,
 *:after,
 *:before {
@@ -9,7 +7,6 @@ body, html { font-size: 100%; 	padding: 0; margin: 0;}
 	box-sizing: border-box;
 }
 
-/* Clearfix hack by Nicolas Gallagher: http://nicolasgallagher.com/micro-clearfix-hack/ */
 .clearfix:before,
 .clearfix:after {
 	content: " ";
@@ -67,7 +64,7 @@ a:hover,a:focus{color:#74777b;text-decoration: none;}
 	left: 0px;
 	border: 150px solid transparent;
 	cursor: default;
-	border-radius: 50%;
+	border-radius: 100%;
 	transform: scale(0);
 	transition: transform 1.4s 0.07s;
 	z-index: -1;
@@ -89,8 +86,8 @@ a:hover,a:focus{color:#74777b;text-decoration: none;}
 }
 .navbar .menu li a{
 	text-align: center;
-	width: 60px;
-	height: 60px;
+	width: 65px;
+	height: 65px;
 	line-height: 60px;
 	border-radius: 50%;
 	background: #fff;

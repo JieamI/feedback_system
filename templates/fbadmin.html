@@ -1,0 +1,126 @@
+{% extends 'basic.html' %}
+
+{% block head %}
+{{super()}}
+<title>HOME</title>
+<link href="{{ url_for('static', filename='css/model.min.css') }}" rel="stylesheet">
+<script src="{{ url_for('static', filename='js/jquery.min.js')}}"></script>
+<script src="{{ url_for('static', filename='js/myadmin.js')}}"></script>   
+<style>
+    li{
+        padding: 1ex;
+    }
+    li:hover{
+        background-color: rgba(0, 0, 0, 0.411);
+    }   
+    a{
+        font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        font-size: larger;
+        color: rgba(0, 0, 0, 0.432);
+        text-decoration: none ;
+    }
+    .list {
+    margin-bottom: 10px;
+    box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.16), 0 2px 10px 0 rgba(0, 0, 0, 0.12);
+}
+
+    .list li {
+        padding: 12px 24px;
+        border-bottom: 1px solid #ddd;
+    }
+
+    .list li:last-child {
+        border-bottom:none;
+    }
+
+    .list li:hover {
+        background-color: #f8f9fa;
+    }
+
+    .float-right {
+        float: right;
+    }
+
+    .btn {
+        font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        font-size: 15px;
+        padding: 3px 5px;
+        text-decoration: none;
+        float: right;
+        cursor: pointer;
+        background-color: white;
+        color: black;
+        border: 1px solid #555555;
+        border-radius: 5px;
+    }
+
+    .btn:hover {
+        text-decoration: none;
+        background-color: rgba(255, 0, 0, 0.596);
+        color: white;
+        border: 1px solid black;
+    }
+    .add{
+        color:#00000094;
+        font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        padding: 5ex;
+        margin: auto;
+    }
+    .add input[type="text"]{
+        line-height: 5ex;
+        text-align: center;
+        width: 30ex;
+        float: left;
+    }
+    .add input[type="submit"]{
+        width: 100px;
+        padding: 3px 5px;
+        float: left;
+        cursor: pointer;
+        line-height: 5ex;
+        border: 1px solid #555555;
+        border-radius: 5px;
+        color: #fff;
+        font-size: 15px;
+        letter-spacing: 1px;
+        background: #3385ff;
+        outline: medium;
+    }
+</style> 
+{% endblock %}
+
+{% block content %}
+<body>
+    <div class="navbar-default sidebar nicescroll" >
+        <ul class="nav" id="side-menu">
+            <li>
+                <a href="{{url_for('index')}}" >首页</a>
+            </li>
+            <li>
+                <a href="{{url_for('fbranking')}}" >反馈热度</a>
+            </li>
+            <li>
+                <a href="{{url_for('fbadmin')}}" >反馈类型管理</a>
+            </li>
+        </ul>   
+    </div>
+    
+    <div id="page-wrapper">
+       
+        <form method="POST" class="add" style="display:flex;">
+            <input name="add" type="text" placeholder="请输入需要添加的反馈类型"> 
+            <input class="btn" type="submit" value="add">
+        </form>
+       
+        {% for each in typelist %}
+        <li>{{ each }}
+            <form method="POST" style="display: inline;">
+                <input style="display: none;" name="delete" value="{{each}}">
+                <input class="btn" type="submit" value="delete">
+            </form>
+        </li>
+        {% endfor %}
+        
+    </div>
+</body>
+{% endblock %}

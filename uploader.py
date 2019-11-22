@@ -1,8 +1,8 @@
+#负责用户反馈中的附件上传
 import os
 import re
 import urllib
 import json
-import base64
 from flask import url_for
 from datetime import datetime
 from random import randrange
@@ -13,8 +13,8 @@ logger = logging.getLogger(__name__)
 
 
 class UpLoader(object):
-    stateMap = [  # 上传状态映射表，国际化用户需考虑此处数据的国际化
-        "SUCCESS",  # 上传成功标记，在UEditor中内不可改变，否则flash判断会出错
+    stateMap = [  
+        "SUCCESS",  
         "文件大小超出 upload_max_filesize 限制",
         "文件大小超出 MAX_FILE_SIZE 限制",
         "文件未被完整上传",
@@ -71,7 +71,7 @@ class UpLoader(object):
         else:
             self.state_info = self.get_state_error('ERROR_SIZE_EXCEED')
 
-   
+   #检查文件大小是否满足上传条件
     def check_size(self):
         size = self.file_obj.stream.read()  # 读完文件流，需要把指针设回起点
         self.file_obj.stream.seek(0, 0)
@@ -80,7 +80,7 @@ class UpLoader(object):
         if length > self.config.get('maxSize'):
             return False
         return True
-
+    #检查文件类型
     def check_file_type(self):
         file_name = secure_filename(self.file_obj.filename)
         if file_name:
@@ -89,7 +89,7 @@ class UpLoader(object):
             if file_extension in self.config.get('allowFiles', None):
                 return file_extension
         return False
-
+    #获取文件存入路径
     def get_file_path(self):
         filename_path = self.config.get('pathFormat', None)
         if filename_path:
@@ -107,17 +107,12 @@ class UpLoader(object):
                 _path = _pattern.sub(rand_nums, filename_path)
                 return _path
         return None
-
+    #上传错误
     def get_state_error(self, err):
-        """
-            上传错误
-        """
+        
         return self.state_error.get(err, 'ERROR_UNKNOWN')
-
+    #返回信息
     def callback_info(self):
-        """
-        :return: 返回当前上传信息
-        """
         return {
             "state": self.state_info,
             "url": url_for('static', filename=self.base_name[1:], _external=True),

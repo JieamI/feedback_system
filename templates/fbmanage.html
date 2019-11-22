@@ -1,0 +1,118 @@
+{% extends 'basic.html' %}
+
+{% block head %}
+{{super()}}
+<title>反馈管理</title>
+<link href="{{ url_for('static', filename='css/model.min.css') }}" rel="stylesheet">
+<script src="{{ url_for('static', filename='js/jquery.min.js')}}"></script>
+<script src="{{ url_for('static', filename='js/myadmin.js')}}"></script>
+<style>
+    li {
+        padding: 1ex;
+    }
+
+    li:hover {
+        background-color: rgba(0, 0, 0, 0.411);
+    }
+
+    a {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        font-size: larger;
+        color: rgba(0, 0, 0, 0.432);
+        text-decoration: none;
+    }
+
+    .list {
+        list-style-type: none;
+        padding: 0;
+        margin-bottom: 10px;
+        box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.16), 0 2px 10px 0 rgba(0, 0, 0, 0.12);
+    }
+
+    .list li {
+        padding: 12px 24px;
+        border-bottom: 1px solid #ddd;
+    }
+
+    .list li:last-child {
+        border-bottom: none;
+    }
+
+    .list li:hover {
+        background-color: #f8f9fa;
+    }
+
+    .float-right {
+        float: right;
+    }
+
+    .btn {
+        font-size: 12px;
+        padding: 3px 5px;
+        text-decoration: none;
+        cursor: pointer;
+        background-color: white;
+        color: black;
+        border: 1px solid #555555;
+        border-radius: 5px;
+    }
+
+    .btn:hover {
+        text-decoration: none;
+        background-color: black;
+        color: white;
+        border: 1px solid black;
+    }
+
+    .new {
+        width: 100px;
+        padding: 3px 5px;
+        margin: 20px;
+        float: left;
+        cursor: pointer;
+        line-height: 30px;
+        border: 1px solid #555555;
+        border-radius: 5px;
+        color: #fff;
+        font-size: 15px;
+        letter-spacing: 1px;
+        background: #3385ff;
+        outline: medium;
+        text-align: center;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<body>
+    <div class="navbar-default sidebar nicescroll">
+
+        <ul class="nav" id="side-menu">
+            <li>
+                <a href="{{url_for('index')}}">首页</a>
+            </li>
+            <li>
+                <a href="{{url_for('fbmanage')}}">我的反馈</a>
+            </li>
+        </ul>
+    </div>
+
+    <div id="page-wrapper">
+        <a href="{{url_for('feedback')}}" class="new" style="align-items: center;">新建</a><br><br><br>
+        <ul class="list">
+            {% for text in f_list %}
+            <li>{{ text|textfilter }}
+                <span class="float-right">
+                    <input class="btn" type="button" onclick='alert("{{ text }}");' value="详情"></a>
+                    <form method="POST" style="display: inline;">
+                        <input style="display: none;" name="Text" value="{{ text }}">
+                        <input class="btn" type="submit" name="delete" value="删除" onclick="return confirm('确认删除吗？');">
+                    </form>
+                </span>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</body>
+{% endblock %}

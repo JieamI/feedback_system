@@ -3,54 +3,16 @@ from flask import Flask, render_template, make_response
 from flask import request, url_for, redirect, flash
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
+from flask_mail import Mail, Message
 from uploader import UpLoader
+
+from threading import Thread
+from config import *
 import json
 import os
-import traceback
 import re
 import sys
 
-WIN = sys.platform.startswith('win')
-if WIN:
-    prefix = 'sqlite:///'
-else:
-    prefix = 'sqlite:////'
-
-app = Flask(__name__)
-#配置模型数据库的地址
-app.config['SQLALCHEMY_DATABASE_URI'] = prefix + os.path.join(app.root_path, 'data.db')
-app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev')
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False             
-
-#注意需要在传入实例之前配置
-db = SQLAlchemy(app) 
-#初始化flask-login,登录后变量current_user即为当前用户模型类记录              
-login_manager = LoginManager(app)
-#当访客不处于登录状态时将其重定向至login端点   
-login_manager.login_view = 'login'
-
-@login_manager.user_loader
-def load_user(id):
-    user = User.query.get(int(id))
-    return user
-
-#创建用户数据库，通过继承于UserMixin使current_user拥有is_authenticated等方法
-class User(db.Model, UserMixin):                
-    id = db.Column(db.Integer, primary_key = True)
-    nickname = db.Column(db.String(20))
-    username = db.Column(db.String(20))
-    #存入密码的散列值以增强安全性
-    password_hash = db.Column(db.String(20))       
-    
-    def if_pass(self, password):
-        return check_password_hash(self.password_hash, password)
-
- #创建反馈数据库
-class Feedback(db.Model):         
-    id = db.Column(db.Integer, primary_key = True)
-    username = db.Column(db.String(20))
-    text = db.Column(db.Text)
-    category = db.Column(db.String(50))
 
 
 #登录路由
@@ -91,7 +53,10 @@ def register():
         if password != c_password:
             flash("两次密码输入不一致")
             return redirect(url_for('register'))
-        
+
+        if not re.match(r'^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$', username):
+            flash("请输入合法的邮箱地址")
+            return redirect(url_for('register'))
         
         if User.query.filter_by(username = username).first():
             flash('用户名已存在')
@@ -126,44 +91,100 @@ def index():
     else:
         return render_template('index.html')
 
+
+#用户路由
+@app.route('/home', methods = ['POST', 'GET'])
+@login_required
+def home():
+    return render_template("home.html", user = current_user)
+
+#用户反馈管理路由
+@app.route('/home/fbmanage', methods = ['POST', 'GET'])
+@login_required
+def fbmanage():
+    feedback = []
+    for each in Feedback.query.filter_by(username = current_user.username).all():
+        feedback.append(each.text)
+    if request.method == 'POST':
+        text = request.form.get("Text")
+        res = Feedback.query.filter_by(username = current_user.username, text = text).first()
+        db.session.delete(res)
+        db.session.commit()
+        return redirect(url_for('fbmanage'))
+        
+    return render_template('fbmanage.html', f_list = feedback)
+
+#反馈热度路由
+@app.route('/home/fbranking')
+@login_required
+def fbranking():
+    _set = []
+    print(re_set.sort_set(name = 'wdnmd'))
+    for each in re_set.sort_set(name = 'wdnmd'):
+        temp = []
+        temp.append(each[0].decode())
+        temp.append(each[1])    
+        
+        _set.append(temp) 
+    return render_template("fbranking.html", set = _set)
+
+#反馈类型管理路由
+@app.route('/home/fbadmin', methods = ['POST', 'GET'])
+@login_required
+def fbadmin():
+    if request.method == 'POST':
+        del_type = request.form.get("delete")
+        add_type = request.form.get("add")
+        if del_type:
+            typelist.remove(del_type)
+            re_set.zrem('wdnmd', del_type)
+            return redirect(url_for("fbadmin"))
+        elif add_type:
+            typelist.append(add_type)
+            return redirect(url_for("fbadmin"))
+        
+    return render_template("fbadmin.html", typelist = typelist)
+
 #反馈路由
 @app.route('/feedback', methods = ['POST', 'GET'])
 def feedback():
     if request.method == 'POST':
-        text = request.form.get("Feedback")                      
-        checkbox = ','.join(request.form.getlist("Checkbox"))
-        '''
-        if not text:
-            flash("反馈内容不能为空")
-            return redirect(url_for('feedback')) 
-        if not checkbox:
-            flash("请选择反馈类型")
-        
-            return render_template('feedback.html', text = text)              
-        '''
+        #此处text获得是html内容,含有html标签
+        text = request.form.get("Feedback")                                
+        checkbox = request.form.getlist("Checkbox")
+        #后端进一步验证表单，以保证数据可靠性
         if not text or not checkbox:
             flash("请保证输入完整！")
+            return redirect(url_for("feedback"))
+        
+        #发送html格式邮件
+        email(text)
+         #将反馈类型存入redis
+        re_set.to_set(name = 'wdnmd', lis = checkbox)
+        #将列表转为字符串存进数据库
+        checkbox = ','.join(checkbox)
+        #将html格式过滤为只含反馈文本内容的字符串
+        text_filter = re.compile('>.*?<')
+        text = ''.join(re.findall(text_filter,text)).replace('>','').replace('<','')
 
-        text = text.strip('<p>/;&nbsp')
         if current_user.is_authenticated:
             username = current_user.username
+            feedback = Feedback(username = username, text = text, category = checkbox)
         else:
-            username = "Visitor"                                                   #这里需要优化
-        feedback = Feedback(username = username, text = text, category = checkbox)
+            #游客反馈时，不存入用户名
+            feedback = Feedback(text = text, category = checkbox)                                               
+        
         db.session.add(feedback)
         db.session.commit()
         flash("感谢您的反馈！")
         return redirect(url_for("index"))
-    return render_template('feedback.html')
+    
+    return render_template('feedback.html', typelist = typelist)
    
 
 #文件上传路由   
 @app.route('/upload/', methods=['GET', 'POST'])
 def upload():
-    """UEditor文件上传接口
-        config 配置文件flask
-        result 返回结果
-        """
     result = {}
     basedir = os.path.dirname(__file__)
     action = request.args.get('action', None)
@@ -172,8 +193,8 @@ def upload():
         try:
             CONFIG = json.loads(re.sub(r'\/\*.*\*\/', '', t))
         except Exception as e:
-            traceback.print_exc(e)
             CONFIG = {}
+    #初次载入需要进行初始配置，返回读取的配置内容
     if action == 'config':
         result = CONFIG
 
@@ -217,9 +238,6 @@ def upload():
 
 
 
-
-
-
-
 if __name__ == '__main__':
-    app.run()
+    #以多线程处理并发请求
+    app.run(threaded = True)

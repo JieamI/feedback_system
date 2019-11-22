@@ -19,9 +19,10 @@
 
 				{% if current_user.is_authenticated %}
 				<li><a href="{{url_for('logout')}}">logout</a></li>
-				<li><a href="#">home</a></li>
+				<li><a href="{{url_for('home')}}">home</a></li>
 				{% else %}
 				<li><a href="{{url_for('login')}}">login</a></li>
+				<li><a href="{{url_for('register')}}">register</a></li>
 				{% endif %}
 			</ul>
 		</div>
