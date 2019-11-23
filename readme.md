@@ -26,3 +26,6 @@
 *参考方面有，Index模板的css动画效果。ueditor附件上传方法官方实例
 *饼状图使用了echarts组件
 *受益良多。
+
+终端输入flask run可开启调试
+调试模式下主页：localhost:5000/index
