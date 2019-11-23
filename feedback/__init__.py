@@ -4,9 +4,9 @@ from flask import request, url_for, redirect, flash
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from flask_mail import Mail, Message
-from redis_set import Redis_set
 from threading import Thread
-from redis_set import Redis_set
+from feedback.redis_set import Redis_set
+from feedback.uploader import UpLoader
 import json
 import os
 import re
@@ -87,3 +87,5 @@ def textfilter(text):
 @app.template_filter('size')
 def get_size(lis):
     return len(lis)
+
+from feedback import views

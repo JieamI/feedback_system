@@ -1,12 +1,8 @@
-from flask_sqlalchemy import SQLAlchemy 
 from flask import Flask, render_template, make_response
 from flask import request, url_for, redirect, flash
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
-from flask_mail import Mail, Message
-from uploader import UpLoader
-from threading import Thread
-from config import *
+from flask_login import login_user, logout_user, login_required, current_user
+from feedback import app, db, User, Feedback, re_set, typelist, email, UpLoader
 import json
 import os
 import re
