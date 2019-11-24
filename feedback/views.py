@@ -103,6 +103,8 @@ def fbmanage():
     if request.method == 'POST':
         text = request.form.get("Text")
         res = Feedback.query.filter_by(username = current_user.username, text = text).first()
+        for each in res.checkbox.split(','):
+            re_set.con.zincrby("wdnmd", -1, each)
         db.session.delete(res)
         db.session.commit()
         return redirect(url_for('fbmanage'))
@@ -154,7 +156,7 @@ def feedback():
         
         #发送html格式邮件
         email(text)
-         #将反馈类型存入redis
+        #将反馈类型存入redis
         re_set.to_set(name = 'wdnmd', lis = checkbox)
         #将列表转为字符串存进数据库
         checkbox = ','.join(checkbox)
@@ -232,7 +234,3 @@ def upload():
 
 
 
-
-if __name__ == '__main__':
-    #以多线程处理并发请求
-    app.run(threaded = True)
