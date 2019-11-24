@@ -6,7 +6,7 @@ class Redis_set:
 
     def to_set(self, name, lis):
         for value in lis:
-            self.con.zincrby(name, 1, value)
+            self.con.zincrby(name, value, 1)
 
     def get_score(self, name, value):
         return self.con.zscore(name, value)
