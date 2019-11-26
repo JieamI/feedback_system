@@ -33,9 +33,15 @@
             <li>
                 <a href="{{url_for('fbranking')}}" >反馈热度</a>
             </li>
+            {% if current_user.username == 'wdnmd' %}
             <li>
                 <a href="{{url_for('fbadmin')}}" >反馈类型管理</a>
             </li>
+            {% else %}
+            <li>
+                <a href="{{url_for('fbmanage')}}">我的反馈</a>
+            </li>
+            {% endif %}
         </ul>
     </div>
     

@@ -21,13 +21,13 @@ if WIN:
 else:
     prefix = 'sqlite:////'
 
-#反馈类型选项
-typelist = ['人工服务','系统故障']
+
 #初始化redis实例，新建'wdnmd'有序集合
 re_set = Redis_set(name = 'wdnmd')
 
 #配置模型数据库的地址   
 app.config['SQLALCHEMY_DATABASE_URI'] = prefix + os.path.join(app.root_path, 'data.db')
+#app.config['SQLALCHEMY_DATABASE_URI'] = prefix + os.path.join(os.path.dirname(app.root_path), 'data.db')
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False    
  #配置邮箱地址  

@@ -2,7 +2,7 @@ from flask import Flask, render_template, make_response
 from flask import request, url_for, redirect, flash
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import login_user, logout_user, login_required, current_user
-from feedback import app, db, User, Feedback, re_set, typelist, email, UpLoader
+from feedback import app, db, User, Feedback, re_set, email, UpLoader
 import json
 import os
 import re
@@ -91,7 +91,7 @@ def index():
 @app.route('/home', methods = ['POST', 'GET'])
 @login_required
 def home():
-    return render_template("home.html", user = current_user)
+    return render_template("home.html")
 
 #用户反馈管理路由
 @app.route('/home/fbmanage', methods = ['POST', 'GET'])
@@ -103,8 +103,8 @@ def fbmanage():
     if request.method == 'POST':
         text = request.form.get("Text")
         res = Feedback.query.filter_by(username = current_user.username, text = text).first()
-        for each in res.checkbox.split(','):
-            re_set.con.zincrby("wdnmd", -1, each)
+        for each in res.category.split(','):
+            re_set.con.zincrby(re_set.name, -1, each)
         db.session.delete(res)
         db.session.commit()
         return redirect(url_for('fbmanage'))
@@ -116,8 +116,8 @@ def fbmanage():
 @login_required
 def fbranking():
     _set = []
-    print(re_set.sort_set(name = 'wdnmd'))
-    for each in re_set.sort_set(name = 'wdnmd'):
+    print(re_set.sort_set())
+    for each in re_set.sort_set():
         temp = []
         temp.append(each[0].decode())
         temp.append(each[1])    
@@ -129,17 +129,21 @@ def fbranking():
 @app.route('/home/fbadmin', methods = ['POST', 'GET'])
 @login_required
 def fbadmin():
+    if current_user.username != 'wdnmd':
+        flash("请以管理员身份登录！")
+        return redirect(url_for("login"))
     if request.method == 'POST':
         del_type = request.form.get("delete")
         add_type = request.form.get("add")
         if del_type:
-            typelist.remove(del_type)
-            re_set.zrem('wdnmd', del_type)
+            re_set.con.zrem(re_set.name, del_type)
             return redirect(url_for("fbadmin"))
         elif add_type:
-            typelist.append(add_type)
+            re_set.con.zincrby(re_set.name, 0, add_type)
             return redirect(url_for("fbadmin"))
-        
+    typelist = []
+    for each in re_set.con.zrevrange(re_set.name, 0, re_set.con.zcard(re_set.name)+1, withscores=False):
+        typelist.append(each.decode())    
     return render_template("fbadmin.html", typelist = typelist)
 
 #反馈路由
@@ -157,7 +161,7 @@ def feedback():
         #发送html格式邮件
         email(text)
         #将反馈类型存入redis
-        re_set.to_set(name = 'wdnmd', lis = checkbox)
+        re_set.to_set(lis = checkbox)
         #将列表转为字符串存进数据库
         checkbox = ','.join(checkbox)
         #将html格式过滤为只含反馈文本内容的字符串
@@ -175,7 +179,10 @@ def feedback():
         db.session.commit()
         flash("感谢您的反馈！")
         return redirect(url_for("index"))
-    
+    typelist = []
+    for each in re_set.con.zrevrange(re_set.name, 0, re_set.con.zcard(re_set.name)+1, withscores=False):
+        typelist.append(each.decode())    
+
     return render_template('feedback.html', typelist = typelist)
    
 
